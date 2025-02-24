@@ -2,24 +2,24 @@ import argparse
 import ollama
 from agent import Jenova
 
-def query_ollama(model, prompt, system_message=None):
+def query_ollama(model, prompt, system_message=None, verbose=False):
     ollama.api_host = "http://localhost:11434"
     messages = [{"role": "user", "content": prompt}]
     if system_message:
         messages.insert(0,{"role": "system", "content": system_message})
 
-    # pretty_print_prompt(prompt, system_message)
-
-    response = ollama.chat(
+    result = ollama.chat(
         model=model,  # Replace with the model you're using
         messages=messages
     )
+    response = result['message']['content']
+    if verbose: pretty_print_prompt(prompt, system_message, response)
+    return response
 
-    return response['message']['content']
-
-def pretty_print_prompt(prompt, system_message):
-    print(system_message)
-    print(prompt)
+def pretty_print_prompt(prompt, system_message, response):
+    print(f"{system_message=}")
+    print(f"{prompt=}")
+    print(f"{response=}")
 
 def main():
     parser = argparse.ArgumentParser(description='Chat with Ollama')
