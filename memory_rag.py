@@ -51,18 +51,20 @@ class Rag():
 
         results = self.session.execute(stmt).all()
 
-        for res in results:
-            print(res[0].prompt, res[0].response, f"Distance: {res[1]}")
+        # for res in results:
+        #     print(res[0].prompt, res[0].response, f"Distance: {res[1]}")
+        #
+        return results
 
-    def search_response_embedding(self, query):
-        query_embedding = self.model.encode(query)
-        query_vector = query_embedding.tolist()
-
-        stmt = select(Embedding).order_by(Embedding.response_embedding.l2_distance(query_vector)).limit(2)
-        results = self.session.execute(stmt).scalars().all()
-
-        for res in results:
-            print(res.prompt, res.response)
+    # def search_response_embedding(self, query):
+    #     query_embedding = self.model.encode(query)
+    #     query_vector = query_embedding.tolist()
+    #
+    #     stmt = select(Embedding).order_by(Embedding.response_embedding.l2_distance(query_vector)).limit(2)
+    #     results = self.session.execute(stmt).scalars().all()
+    #
+    #     for res in results:
+    #         print(res.prompt, res.response)
 
     # def test_search(self, text):
     #     embedding = self.model.encode(text)

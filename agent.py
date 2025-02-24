@@ -21,8 +21,18 @@ class Jenova():
     def add_memory(self, prompt, response):
         self.memory.write_embedding(prompt, response)
 
-    def search_memory(self, query):
-        self.memory.search_prompt_embedding(query)
-        self.memory.search_response_embedding(query)
+    def get_memory(self, query):
+        memory = self.memory.search_prompt_embedding(query)
+        # self.memory.search_response_embedding(query)
+        memory = self.promptify_memory(memory)
+        return memory
 
 
+    def promptify_memory(self, memory):
+        conversation = "#HISTORY:\n"
+        for entry in memory:
+            prompt = entry[0].prompt
+            response = entry[0].response
+            conversation += f"User:{prompt}\n"
+            conversation += f"Assistant:{response}\n"
+        return conversation

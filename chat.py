@@ -8,7 +8,7 @@ def query_ollama(model, prompt, system_message=None):
     if system_message:
         messages.insert(0,{"role": "system", "content": system_message})
 
-    pretty_print_prompt(prompt, system_message)
+    # pretty_print_prompt(prompt, system_message)
 
     response = ollama.chat(
         model=model,  # Replace with the model you're using
@@ -60,16 +60,16 @@ def main():
 
     elif args.question:
         prompt = args.prompt
-        system_message = "You are a helpful assistant. Your job is to answer questions for the user."
-        response = query_ollama(args.model, prompt, system_message)
+        memory = jenova.get_memory(prompt)
+        prompt_with_memory = prompt + "\n" + memory
+        system_message = "You are a helpful assistant. Your job is to answer questions for the user. You are given HISTORY for relevant previous conversations"
+        response = query_ollama(args.model, prompt_with_memory, system_message)
         if response:
             jenova.add_memory(prompt, response)
         print(response)
 
     else:
         print("Expecting either --command or --question. Doing nothing")
-
-
 
 if __name__ == "__main__":
     main()
