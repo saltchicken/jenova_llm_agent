@@ -27,7 +27,6 @@ class Jenova():
         memory = self.promptify_memory(memory)
         return memory
 
-
     def promptify_memory(self, memory):
         conversation = "#HISTORY:\n"
         for entry in memory:
