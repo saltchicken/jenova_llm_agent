@@ -24,14 +24,17 @@ class Jenova():
     def get_memory(self, query):
         memory = self.memory.search_prompt_embedding(query)
         # self.memory.search_response_embedding(query)
-        memory = self.promptify_memory(memory)
+        memory = self.promptify_memory(memory, "HISTORY")
         return memory
 
-    def promptify_memory(self, memory):
-        conversation = "#HISTORY:\n"
+    def get_recent_memory(self):
+        memory = self.memory.get_recent_conversations()
+        memory = self.promptify_memory(memory, "RECENT_CONVERSATIONS")
+        return memory
+
+    def promptify_memory(self, memory, memory_title):
+        conversation = f"#{memory_title}:\n"
         for entry in memory:
-            prompt = entry[0].prompt
-            response = entry[0].response
-            conversation += f"User:{prompt}\n"
-            conversation += f"Assistant:{response}\n"
+            conversation += f"User:{entry.prompt}\n"
+            conversation += f"Assistant:{entry.response}\n"
         return conversation

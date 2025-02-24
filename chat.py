@@ -17,9 +17,13 @@ def query_ollama(model, prompt, system_message=None, verbose=False):
     return response
 
 def pretty_print_prompt(prompt, system_message, response):
-    print(f"{system_message=}")
-    print(f"{prompt=}")
-    print(f"{response=}")
+    print("-------SYSTEM MESSAGE--------")
+    print(system_message)
+    print("----------PROMPT---------")
+    print(prompt)
+    print("----------RESPONSE---------")
+    print(response)
+    print("\n\n")
 
 def main():
     parser = argparse.ArgumentParser(description='Chat with Ollama')
@@ -27,6 +31,7 @@ def main():
     parser.add_argument('--model', type=str, default='test', help='The model to use')
     parser.add_argument('--command', action="store_true", help='Make a call to the agent')
     parser.add_argument('--question', action="store_true", help='Ask a question')
+    parser.add_argument('--verbose', action="store_true", help='Return verbose responses with system_message, prompt, and response')
     # parser.add_argument('--system-message', default=None, help='The system message to send to Ollama')
     args = parser.parse_args()
 
@@ -60,10 +65,12 @@ def main():
 
     elif args.question:
         prompt = args.prompt
-        memory = jenova.get_memory(prompt)
-        prompt_with_memory = prompt + "\n" + memory
-        system_message = "You are a helpful assistant. Your job is to answer questions for the user. You are given HISTORY for relevant previous conversations"
-        response = query_ollama(args.model, prompt_with_memory, system_message)
+        relevant_memory = jenova.get_memory(prompt)
+        recent_memory = jenova.get_recent_memory()
+
+        prompt_with_memory = prompt + "\n" + recent_memory + "\n" + relevant_memory
+        system_message = "You are a helpful assistant. Your job is to answer questions for the user. You are given HISTORY for relevant previous conversations and RECENT_CONVERSATION for the most recent conversations."
+        response = query_ollama(args.model, prompt_with_memory, system_message, args.verbose)
         if response:
             jenova.add_memory(prompt, response)
         print(response)
