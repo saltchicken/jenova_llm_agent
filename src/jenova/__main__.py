@@ -1,29 +1,8 @@
 import argparse
 import ollama
 from .agent import Jenova
+from .llm_api import query_ollama
 
-def query_ollama(model, prompt, system_message=None, verbose=False):
-    ollama.api_host = "http://localhost:11434"
-    messages = [{"role": "user", "content": prompt}]
-    if system_message:
-        messages.insert(0,{"role": "system", "content": system_message})
-
-    result = ollama.chat(
-        model=model,  # Replace with the model you're using
-        messages=messages
-    )
-    response = result['message']['content']
-    if verbose: pretty_print_prompt(prompt, system_message, response)
-    return response
-
-def pretty_print_prompt(prompt, system_message, response):
-    print("-------SYSTEM MESSAGE--------")
-    print(system_message)
-    print("----------PROMPT---------")
-    print(prompt)
-    print("----------RESPONSE---------")
-    print(response)
-    print("\n\n")
 
 def main():
     parser = argparse.ArgumentParser(description='Chat with Jenova')
@@ -42,13 +21,8 @@ def main():
     args = parser.parse_args()
 
     jenova = Jenova()
+    jenova.setup()
 
-    def dummy():
-        print("Hello")
-
-    jenova.add_tool("computer_power_off", "turns the computer off", dummy)
-    jenova.add_tool("computer_reboot", "reboots the computer", dummy)
-    jenova.add_tool("light_toggle", "toggles the lights of the computer", dummy)
 
     if args.pipeline == "command":
         tools = jenova.promptify_tools()
@@ -57,8 +31,8 @@ def main():
         system_message = "You are an AI agent. From the following list of tools in the Toolbox, choose which one the user is requesting. Respond only with the name of the tool. Respond with 'UNKNOWN' if the user's request is not in the Toolbox."
 
 
-        command = query_ollama(args.model, prompt, system_message)
-        print(command)
+        command = query_ollama(args.model, prompt, system_message, args.verbose)
+        command = command.strip()
 
         result = [tool for tool in jenova.tools if tool["name"] == command]
 
@@ -71,11 +45,15 @@ def main():
 
     elif args.pipeline == "question":
         prompt = args.prompt
-        relevant_memory = jenova.get_memory(prompt)
+        relevant_memory = jenova.get_relevant_memory(prompt)
         recent_memory = jenova.get_recent_memory()
+        prompt_with_memory = prompt + "\n\n" + recent_memory + "\n" + relevant_memory
 
-        prompt_with_memory = prompt + "\n" + recent_memory + "\n" + relevant_memory
-        system_message = "You are a helpful assistant. Your job is to answer questions for the user. You are given HISTORY for relevant previous conversations and RECENT_CONVERSATION for the most recent conversations."
+        system_message = """You are a helpful assistant. 
+Your job is to answer questions for the user. 
+You are given HISTORY for relevant previous conversations and RECENT_CONVERSATION for the most recent conversations. 
+Do not mention that you are checking HISTORY and RECENT_CONVERSATION. 
+Keep your response short and concise.""".replace("\n", " ")
         response = query_ollama(args.model, prompt_with_memory, system_message, args.verbose)
         if response:
             jenova.add_memory(prompt, response)
