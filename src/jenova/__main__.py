@@ -1,6 +1,6 @@
 import argparse
 import ollama
-from agent import Jenova
+from .agent import Jenova
 
 def query_ollama(model, prompt, system_message=None, verbose=False):
     ollama.api_host = "http://localhost:11434"
@@ -26,12 +26,18 @@ def pretty_print_prompt(prompt, system_message, response):
     print("\n\n")
 
 def main():
-    parser = argparse.ArgumentParser(description='Chat with Ollama')
-    parser.add_argument('prompt', type=str, help='The prompt to send to Ollama')
-    parser.add_argument('--model', type=str, default='test', help='The model to use')
-    parser.add_argument('--command', action="store_true", help='Make a call to the agent')
-    parser.add_argument('--question', action="store_true", help='Ask a question')
-    parser.add_argument('--verbose', action="store_true", help='Return verbose responses with system_message, prompt, and response')
+    parser = argparse.ArgumentParser(description='Chat with Jenova')
+    subparsers = parser.add_subparsers(dest='pipeline')
+
+    command_parser = subparsers.add_parser('command', help='Use the command pipeline')
+    command_parser.add_argument('prompt', type=str, help='The prompt to send to Ollama')
+    command_parser.add_argument('--model', type=str, default='test', help='The model to use')
+    command_parser.add_argument('--verbose', action="store_true", help='Return verbose responses with system_message, prompt, and response')
+
+    question_parser = subparsers.add_parser('question', help='Use the question pipeline')
+    question_parser.add_argument('prompt', type=str, help='The prompt to send to Ollama')
+    question_parser.add_argument('--model', type=str, default='test', help='The model to use')
+    question_parser.add_argument('--verbose', action="store_true", help='Return verbose responses with system_message, prompt, and response')
     # parser.add_argument('--system-message', default=None, help='The system message to send to Ollama')
     args = parser.parse_args()
 
@@ -44,7 +50,7 @@ def main():
     jenova.add_tool("computer_reboot", "reboots the computer", dummy)
     jenova.add_tool("light_toggle", "toggles the lights of the computer", dummy)
 
-    if args.command:
+    if args.pipeline == "command":
         tools = jenova.promptify_tools()
         prompt = args.prompt + "\n" + tools
 
@@ -63,7 +69,7 @@ def main():
         else:
             print("Unknown command")
 
-    elif args.question:
+    elif args.pipeline == "question":
         prompt = args.prompt
         relevant_memory = jenova.get_memory(prompt)
         recent_memory = jenova.get_recent_memory()

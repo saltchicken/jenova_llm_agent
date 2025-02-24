@@ -1,4 +1,4 @@
-from memory_rag import Rag
+from .memory_rag import Rag
 
 class Jenova():
     def __init__(self):
