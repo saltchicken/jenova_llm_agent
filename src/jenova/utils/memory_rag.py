@@ -15,6 +15,14 @@ class Embedding(Base):
     response_embedding = Column(Vector(384), nullable=False)
     timestamp = Column(DateTime, server_default=func.now())
 
+class Memory(Base):
+    __tablename__ = "memory"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    memory = Column(String, nullable=False)
+    memory_embedding = Column(Vector(384), nullable=False)
+    timestamp = Column(DateTime, server_default=func.now())
+
 class Rag():
     def __init__(self):
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -37,6 +45,12 @@ class Rag():
                                     response=response,
                                     response_embedding=response_embedding
                                  )
+        self.session.add(memory_entry)
+        self.session.commit()
+
+    def write_memory(self, memory):
+        memory_embedding = self.model.encode(memory)
+        memory_entry = Memory(memory=memory, memory_embedding=memory_embedding)
         self.session.add(memory_entry)
         self.session.commit()
 
@@ -66,6 +80,15 @@ class Rag():
         results = self.session.execute(stmt).scalars().all()
 
         return results
+
+    def get_memory(self):
+        NUM_RECENT_MEMORY = 10
+        stmt = select(Memory).order_by(Memory.timestamp.desc()).limit(NUM_RECENT_MEMORY)
+        results = self.session.execute(stmt).scalars().all()
+
+        return results
+
+
 
 
     # def search_response_embedding(self, query):

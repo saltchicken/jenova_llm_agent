@@ -89,8 +89,16 @@ class BaseAgent():
 
         return toolbox
 
-    def add_memory(self, prompt, response):
+    def add_conversation(self, prompt, response):
         self.memory.write_embedding(prompt, response)
+
+    def add_memory(self, memory):
+        self.memory.write_memory(memory)
+
+    def get_memory(self):
+        memory = self.memory.get_memory()
+        memory = self.promptify_memory(memory, "MEMORY")
+        return memory
 
     def get_relevant_conversations(self, query):
         conversations = self.memory.search_prompt_embedding(query)
@@ -103,12 +111,18 @@ class BaseAgent():
         conversations = self.promptify_conversations(conversations, "RECENT_CONVERSATIONS")
         return conversations
 
-    def promptify_conversations(self, memory, memory_title):
-        conversation = f"#{memory_title}:\n"
-        for entry in memory:
+    def promptify_conversations(self, conversations, conversation_title):
+        conversation = f"#{conversation_title}:\n"
+        for entry in conversations:
             conversation += f"User:{entry.prompt}\n"
             conversation += f"Assistant:{entry.response}\n"
         return conversation
+
+    def promptify_memory(self, memories, memory_title):
+        memory = f"#{memory_title}:\n"
+        for entry in memories:
+            memory += f"Memory:{entry.memory}\n"
+        return memory
 
     def command(self, prompt, model="Test", verbose=False):
         tools = self.promptify_tools()
@@ -136,17 +150,24 @@ Respond with 'UNKNOWN' if the user's request is not in the Toolbox.""".replace("
 
     def question(self, prompt, model="Test", verbose=False):
         prompt = prompt
-        relevant_memory = self.get_relevant_conversations(prompt)
-        recent_memory = self.get_recent_conversations()
-        prompt_with_memory = prompt + "\n\n" + recent_memory + "\n" + relevant_memory
+
+        memory = self.get_memory()
+        relevant_conversations = self.get_relevant_conversations(prompt)
+        recent_conversations = self.get_recent_conversations()
+        prompt_with_memory_and_recent_conversations = prompt + "\n\n" + memory + "\n\n" + recent_conversations + "\n" + relevant_conversations
 
         system_message = """You are a helpful assistant.
 Your job is to answer questions for the user.
-You are given RELEVANT_CONVERSATIONS for relevant previous conversations and RECENT_CONVERSATIONS for the most recent conversations.
-Do not mention that you are checking RELEVANT_CONVERSATIONS and RECENT_CONVERSATIONS.
+You are given MEMORY for knowledge you have, RELEVANT_CONVERSATIONS for relevant previous conversations, and RECENT_CONVERSATIONS for the most recent conversations.
+Do not mention that you are checking MEMORY, RELEVANT_CONVERSATIONS and RECENT_CONVERSATIONS.
 Keep your response short and concise.""".replace("\n", " ")
-        response = query_ollama(model, prompt_with_memory, system_message, verbose)
+        response = query_ollama(model, prompt_with_memory_and_recent_conversations, system_message, verbose)
         if response:
-            self.add_memory(prompt, response)
+            self.add_conversation(prompt, response)
         return response
+
+    def memory_dispatch(self, memory):
+        self.add_memory(memory)
+        return "Added memory"
+
 
