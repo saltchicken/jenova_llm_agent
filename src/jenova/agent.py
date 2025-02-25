@@ -1,7 +1,7 @@
 from .memory_rag import Rag
 import asyncio
 import json
-from .dataclass import Message
+from .dataclass import Message, Response
 from .llm_api import query_ollama
 
 class Jenova():
@@ -27,6 +27,7 @@ class Jenova():
             print(f"Connection from {addr}")
 
             while True:
+                print("Running loop")
                 data = await reader.read(1024)
                 if not data:
                     break
@@ -34,19 +35,16 @@ class Jenova():
                 print(f"Received: {message}")
 
                 if message.type == 'command':
-                    self.command(message.payload, model="Test", verbose=False)
+                    result = self.command(message.payload, model="Test", verbose=False)
 
                 if message.type == 'question':
-                    self.question(message.payload, model="Test", verbose=False)
+                    result = self.question(message.payload, model="Test", verbose=False)
 
+                if result:
+                    response = Response(payload=result)
 
-                response = {
-                    "type": "response",
-                    "payload": f"Received {message.type} with data: {message.payload}"
-                }
-
-                writer.write(json.dumps(response).encode())
-                await writer.drain()
+                    writer.write(response.to_json().encode())
+                    await writer.drain()
 
             print(f"Connection closed: {addr}")
             writer.close()
@@ -114,10 +112,13 @@ class Jenova():
 
         if len(result) == 1:
             result[0]['action']()
+            return result[0]['name']
         elif len(result) > 1:
             print("Error with toolbox")
+            return None
         else:
             print("Unknown command")
+            return None
 
     def question(self, prompt, model="Test", verbose=False):
         prompt = prompt
@@ -133,7 +134,7 @@ Keep your response short and concise.""".replace("\n", " ")
         response = query_ollama(model, prompt_with_memory, system_message, verbose)
         if response:
             self.add_memory(prompt, response)
-        print(response)
+        return response
 
 def main():
     jenova = Jenova()
