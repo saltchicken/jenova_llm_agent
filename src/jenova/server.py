@@ -15,10 +15,10 @@ class Jenova(BaseAgent):
 
     def message_dispatcher(self, message):
         if message.type == 'command':
-            result = self.command(message.payload, model="Test", verbose=False)
+            result = self.command(message.payload, model="Test", verbose=True)
 
         if message.type == 'question':
-            result = self.question(message.payload, model="Test", verbose=False)
+            result = self.question(message.payload, model="Test", verbose=True)
 
         if result:
             return result

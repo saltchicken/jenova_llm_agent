@@ -92,18 +92,18 @@ class BaseAgent():
     def add_memory(self, prompt, response):
         self.memory.write_embedding(prompt, response)
 
-    def get_relevant_memory(self, query):
-        memory = self.memory.search_prompt_embedding(query)
+    def get_relevant_conversations(self, query):
+        conversations = self.memory.search_prompt_embedding(query)
         # self.memory.search_response_embedding(query)
-        memory = self.promptify_memory(memory, "HISTORY")
-        return memory
+        conversations = self.promptify_conversations(conversations, "RELEVANT_CONVERSATIONS")
+        return conversations
 
-    def get_recent_memory(self):
-        memory = self.memory.get_recent_conversations()
-        memory = self.promptify_memory(memory, "RECENT_CONVERSATIONS")
-        return memory
+    def get_recent_conversations(self):
+        conversations = self.memory.get_recent_conversations()
+        conversations = self.promptify_conversations(conversations, "RECENT_CONVERSATIONS")
+        return conversations
 
-    def promptify_memory(self, memory, memory_title):
+    def promptify_conversations(self, memory, memory_title):
         conversation = f"#{memory_title}:\n"
         for entry in memory:
             conversation += f"User:{entry.prompt}\n"
@@ -134,14 +134,14 @@ class BaseAgent():
 
     def question(self, prompt, model="Test", verbose=False):
         prompt = prompt
-        relevant_memory = self.get_relevant_memory(prompt)
-        recent_memory = self.get_recent_memory()
+        relevant_memory = self.get_relevant_conversations(prompt)
+        recent_memory = self.get_recent_conversations()
         prompt_with_memory = prompt + "\n\n" + recent_memory + "\n" + relevant_memory
 
         system_message = """You are a helpful assistant. 
 Your job is to answer questions for the user. 
-You are given HISTORY for relevant previous conversations and RECENT_CONVERSATION for the most recent conversations. 
-Do not mention that you are checking HISTORY and RECENT_CONVERSATION. 
+You are given RELEVANT_CONVERSATIONS for relevant previous conversations and RECENT_CONVERSATIONS for the most recent conversations. 
+Do not mention that you are checking RELEVANT_CONVERSATIONS and RECENT_CONVERSATIONS. 
 Keep your response short and concise.""".replace("\n", " ")
         response = query_ollama(model, prompt_with_memory, system_message, verbose)
         if response:
