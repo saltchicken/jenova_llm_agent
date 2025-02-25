@@ -4,22 +4,19 @@ import json
 from jenova.utils.dataclass import Message, Response
 from jenova.utils.llm_api import query_ollama
 
-class Jenova():
+class BaseAgent():
     def __init__(self):
         self.tools = []
         self.memory = Rag()
+        self.setup()
 
-    def setup(self):
-        def computer_power_off():
-            print("turns off computer")
-        def computer_reboot():
-            print("reboots computer")
-        def light_toggle():
-            print("toggles lights")
+    def setup():
+        pass
 
-        self.add_tool("computer_power_off", "turns the computer off", computer_power_off)
-        self.add_tool("computer_reboot", "reboots the computer", computer_reboot)
-        self.add_tool("light_toggle", "toggles the lights of the computer", light_toggle)
+    def message_dispatcher(self, message):
+        print(message)
+        response = Response(payload="Default response")
+        return response
 
     def event_loop(self):
         async def handle_client(reader, writer):
@@ -28,23 +25,15 @@ class Jenova():
 
             try:
                 while True:
-                    print("Running loop")
                     data = await reader.read(1024)
                     if not data:
                         break
                     message = Message.from_json(data.decode())
-                    print(f"Received: {message}")
-
-                    if message.type == 'command':
-                        result = self.command(message.payload, model="Test", verbose=False)
-
-                    if message.type == 'question':
-                        result = self.question(message.payload, model="Test", verbose=False)
+                    result = self.message_dispatcher(message)
+                    response = Response(payload=result)
 
                     # TODO: Return a terminating Response
-                    if result:
-                        response = Response(payload=result)
-
+                    if response:
                         writer.write(response.to_json().encode())
                         await writer.drain()
             except asyncio.CancelledError:
