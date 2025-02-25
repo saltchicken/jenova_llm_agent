@@ -26,40 +26,62 @@ class Jenova():
             addr = writer.get_extra_info('peername')
             print(f"Connection from {addr}")
 
-            while True:
-                print("Running loop")
-                data = await reader.read(1024)
-                if not data:
-                    break
-                message = Message.from_json(data.decode())
-                print(f"Received: {message}")
+            try:
+                while True:
+                    print("Running loop")
+                    data = await reader.read(1024)
+                    if not data:
+                        break
+                    message = Message.from_json(data.decode())
+                    print(f"Received: {message}")
 
-                if message.type == 'command':
-                    result = self.command(message.payload, model="Test", verbose=False)
+                    if message.type == 'command':
+                        result = self.command(message.payload, model="Test", verbose=False)
 
-                if message.type == 'question':
-                    result = self.question(message.payload, model="Test", verbose=False)
+                    if message.type == 'question':
+                        result = self.question(message.payload, model="Test", verbose=False)
 
-                if result:
-                    response = Response(payload=result)
+                    if result:
+                        response = Response(payload=result)
 
-                    writer.write(response.to_json().encode())
-                    await writer.drain()
+                        writer.write(response.to_json().encode())
+                        await writer.drain()
+            except asyncio.CancelledError:
+                print(f"Connection closed due to cancellation: {addr}")
+            except Exception as e:
+                print(f"Connection closed due to exception: {e}")
+            finally:
+                print(f"Connection closed: {addr}")
+                writer.close()
+                await writer.wait_closed()
 
-            print(f"Connection closed: {addr}")
-            writer.close()
-            await writer.wait_closed()
+                # background_task.cancel()
 
         async def main():
+            background_task = asyncio.create_task(self.other_processing())
             server = await asyncio.start_server(handle_client, '0.0.0.0', 8889)
             addr = server.sockets[0].getsockname()
             print(f"Serving on {addr}")
 
             async with server:
-                await server.serve_forever()
+                try:
+                    await server.serve_forever()
+                except asyncio.CancelledError:
+                    print("Server stopped.")
+                    print("Perform cleanup here")
+                    background_task.cancel()
 
         asyncio.run(main())
 
+    async def other_processing(self):
+        try:
+            while True:
+                # Perform some other processing here
+                print("Performing other processing...")
+                await asyncio.sleep(1)  # Simulate a non-blocking task
+        except asyncio.CancelledError:
+            print("Other processing task canceled.")
+            print("Perform cleanup here")
 
 
 
