@@ -114,8 +114,10 @@ class BaseAgent():
         tools = self.promptify_tools()
         prompt = prompt + "\n" + tools
 
-        system_message = "You are an AI agent. From the following list of tools in the Toolbox, choose which one the user is requesting. Respond only with the name of the tool. Respond with 'UNKNOWN' if the user's request is not in the Toolbox."
-
+        system_message = """You are an AI agent.
+From the following list of tools in the Toolbox, choose which one the user is requesting.
+Respond only with the name of the tool.
+Respond with 'UNKNOWN' if the user's request is not in the Toolbox.""".replace("\n", " ")
 
         command = query_ollama(model, prompt, system_message, verbose)
         command = command.strip()
@@ -138,10 +140,10 @@ class BaseAgent():
         recent_memory = self.get_recent_conversations()
         prompt_with_memory = prompt + "\n\n" + recent_memory + "\n" + relevant_memory
 
-        system_message = """You are a helpful assistant. 
-Your job is to answer questions for the user. 
-You are given RELEVANT_CONVERSATIONS for relevant previous conversations and RECENT_CONVERSATIONS for the most recent conversations. 
-Do not mention that you are checking RELEVANT_CONVERSATIONS and RECENT_CONVERSATIONS. 
+        system_message = """You are a helpful assistant.
+Your job is to answer questions for the user.
+You are given RELEVANT_CONVERSATIONS for relevant previous conversations and RECENT_CONVERSATIONS for the most recent conversations.
+Do not mention that you are checking RELEVANT_CONVERSATIONS and RECENT_CONVERSATIONS.
 Keep your response short and concise.""".replace("\n", " ")
         response = query_ollama(model, prompt_with_memory, system_message, verbose)
         if response:
