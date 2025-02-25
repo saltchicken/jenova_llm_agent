@@ -1,6 +1,7 @@
 from .memory_rag import Rag
 import asyncio
 import json
+from .dataclass import Message
 from .llm_api import query_ollama
 
 class Jenova():
@@ -29,19 +30,19 @@ class Jenova():
                 data = await reader.read(1024)
                 if not data:
                     break
-                message = json.loads(data.decode())
+                message = Message.from_json(data.decode())
                 print(f"Received: {message}")
 
-                if message['type'] == 'command':
-                    self.command(message['payload'], model="Test", verbose=False)
+                if message.type == 'command':
+                    self.command(message.payload, model="Test", verbose=False)
 
-                if message['type'] == 'question':
-                    self.question(message['payload'], model="Test", verbose=False)
+                if message.type == 'question':
+                    self.question(message.payload, model="Test", verbose=False)
 
 
                 response = {
                     "type": "response",
-                    "payload": f"Received {message['type']} with data: {message['payload']}"
+                    "payload": f"Received {message.type} with data: {message.payload}"
                 }
 
                 writer.write(json.dumps(response).encode())

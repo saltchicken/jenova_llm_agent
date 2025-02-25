@@ -1,17 +1,15 @@
 import argparse
 import asyncio, json
+from .dataclass import Message
 
 def agent_message(type, payload):
     async def tcp_client():
         reader, writer = await asyncio.open_connection('127.0.0.1', 8889)
 
-        message = {
-            "type": type,
-            "payload": payload
-        }
+        message = Message(type=type, payload=payload)
 
         print(f"Sending: {message}")
-        writer.write(json.dumps(message).encode())
+        writer.write(message.to_json().encode())
         await writer.drain()
 
         data = await reader.read(1024)
