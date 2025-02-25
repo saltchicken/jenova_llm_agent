@@ -1,6 +1,6 @@
 import argparse
 import asyncio, json
-from .dataclass import Message
+from jenova.utils.dataclass import Message
 
 def agent_message(type, payload):
     async def tcp_client():

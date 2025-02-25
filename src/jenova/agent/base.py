@@ -1,8 +1,8 @@
-from .memory_rag import Rag
+from jenova.utils.memory_rag import Rag
 import asyncio
 import json
-from .dataclass import Message, Response
-from .llm_api import query_ollama
+from jenova.utils.dataclass import Message, Response
+from jenova.utils.llm_api import query_ollama
 
 class Jenova():
     def __init__(self):
@@ -41,6 +41,7 @@ class Jenova():
                     if message.type == 'question':
                         result = self.question(message.payload, model="Test", verbose=False)
 
+                    # TODO: Return a terminating Response
                     if result:
                         response = Response(payload=result)
 
@@ -158,7 +159,3 @@ Keep your response short and concise.""".replace("\n", " ")
             self.add_memory(prompt, response)
         return response
 
-def main():
-    jenova = Jenova()
-    jenova.setup()
-    jenova.event_loop()

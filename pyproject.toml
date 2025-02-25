@@ -9,8 +9,8 @@ dependencies = [
 ]
 
 [project.scripts]
-jenova_server = "jenova.agent:main"
-jenova_client = "jenova.__main__:main"
+jenova_server = "jenova.server:main"
+jenova_client = "jenova.client:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
