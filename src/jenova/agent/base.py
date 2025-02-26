@@ -7,7 +7,7 @@ from jenova.utils.llm_api import query_ollama
 class BaseAgent():
     def __init__(self, db_name):
         self.tools = []
-        self.memory = Rag(db_name)
+        self.rag = Rag(db_name)
         self.setup()
 
     def setup():
@@ -90,24 +90,23 @@ class BaseAgent():
         return toolbox
 
     def add_conversation(self, prompt, response):
-        self.memory.write_conversation(prompt, response)
+        self.rag.write_conversation(prompt, response)
 
     def add_memory(self, memory):
-        self.memory.write_memory(memory)
+        self.rag.write_memory(memory)
 
     def get_memory(self):
-        memory = self.memory.get_memory()
+        memory = self.rag.get_memory()
         memory = self.promptify_memory(memory, "MEMORY")
         return memory
 
     def get_relevant_conversations(self, query):
-        conversations = self.memory.search_conversation_by_prompt(query)
-        # self.memory.search_response_embedding(query)
+        conversations = self.rag.search_conversation_by_prompt(query)
         conversations = self.promptify_conversations(conversations, "RELEVANT_CONVERSATIONS")
         return conversations
 
     def get_recent_conversations(self):
-        conversations = self.memory.get_recent_conversations()
+        conversations = self.rag.get_recent_conversations()
         conversations = self.promptify_conversations(conversations, "RECENT_CONVERSATIONS")
         return conversations
 

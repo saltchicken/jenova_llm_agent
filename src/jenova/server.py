@@ -13,9 +13,6 @@ class Jenova(BaseAgent):
         self.add_tool("computer_reboot", "reboots the computer", computer_reboot)
         self.add_tool("light_toggle", "toggles the lights of the computer", light_toggle)
 
-    def write_memory(self, memory):
-        self.memory.write_memory(memory)
-
     def message_dispatcher(self, message):
         if message.type == 'command':
             result = self.command(message.payload, model="Test", verbose=True)
