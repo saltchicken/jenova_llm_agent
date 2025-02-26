@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 Base = declarative_base()
 
 class Embedding(Base):
-    __tablename__ = "memory_rag"
+    __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     prompt = Column(String, nullable=False)
@@ -24,13 +24,14 @@ class Memory(Base):
     timestamp = Column(DateTime, server_default=func.now())
 
 class Rag():
-    def __init__(self):
+    def __init__(self, db_name):
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
-        self.db = "postgres"
+        self.db = db_name
         DATABASE_URL = f"postgresql://postgres@10.0.0.7:5432/{self.db}"
         self.engine = create_engine(DATABASE_URL)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
+        self.create_table()
 
 
     def create_table(self):
@@ -112,10 +113,10 @@ class Rag():
     #         print(res.id, res.name)
 
 
-if __name__ == "__main__":
-    rag = Rag()
-
-    # rag.create_table()
-    # rag.write_embedding("This was my first question", "Here is the answer to the first question")
-    rag.search_prompt_embedding("I am interested in George Washington")
+# if __name__ == "__main__":
+#     rag = Rag()
+#
+#     # rag.create_table()
+#     # rag.write_embedding("This was my first question", "Here is the answer to the first question")
+#     rag.search_prompt_embedding("I am interested in George Washington")
 

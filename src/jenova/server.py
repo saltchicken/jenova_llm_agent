@@ -32,6 +32,6 @@ class Jenova(BaseAgent):
 
 
 def main():
-    jenova = Jenova()
+    jenova = Jenova("jenova")
     jenova.event_loop()
 

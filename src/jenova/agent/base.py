@@ -5,9 +5,9 @@ from jenova.utils.dataclass import Message, Response
 from jenova.utils.llm_api import query_ollama
 
 class BaseAgent():
-    def __init__(self):
+    def __init__(self, db_name):
         self.tools = []
-        self.memory = Rag()
+        self.memory = Rag(db_name)
         self.setup()
 
     def setup():
