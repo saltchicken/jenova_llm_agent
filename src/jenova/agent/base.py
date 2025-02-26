@@ -90,7 +90,7 @@ class BaseAgent():
         return toolbox
 
     def add_conversation(self, prompt, response):
-        self.memory.write_embedding(prompt, response)
+        self.memory.write_conversation(prompt, response)
 
     def add_memory(self, memory):
         self.memory.write_memory(memory)
@@ -101,7 +101,7 @@ class BaseAgent():
         return memory
 
     def get_relevant_conversations(self, query):
-        conversations = self.memory.search_prompt_embedding(query)
+        conversations = self.memory.search_conversation_by_prompt(query)
         # self.memory.search_response_embedding(query)
         conversations = self.promptify_conversations(conversations, "RELEVANT_CONVERSATIONS")
         return conversations
