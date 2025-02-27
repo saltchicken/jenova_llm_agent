@@ -1,6 +1,7 @@
 import requests
 from duckduckgo_search import DDGS
 import wikipedia
+from jenova.utils.crawler import crawl
 
 def get_wikipedia_summary(question):
     try:
@@ -32,12 +33,28 @@ def duckduckgo_instant_answer(question):
     response = requests.get(url, params=params)
     data = response.json()
 
-    answer = data.get("AbstractText") or data.get("Answer") or "No instant answer found."
+    answer = data.get("AbstractText") or data.get("Answer") or None
     return answer
 
 def duckduckgo_search(question):
-    results = DDGS().text(question, max_results=3)
+    results = DDGS().text(question, max_results=1)
     return [r["href"] for r in results]
+
+async def search_engine_crawler(question):
+    links = duckduckgo_search(question)
+    print(f"FOUND LINKS: {links}")
+    if len(links) == 0:
+        return None
+    question_information = ''
+    for link in links:
+        print("calling crawler")
+        result = await crawl(link)
+        if result is None:
+            print("Resut is none. Skipping")
+        else:
+            question_information += result + "\n"
+    return question_information
+
 
 
 if __name__ == "__main__":
@@ -45,6 +62,6 @@ if __name__ == "__main__":
 
     # result = get_wikipedia_summary(question)
     # result = duckduckgo_instant_answer(question)
-    result = duckduckgo_search(question)
 
-    print(result)
+
+    # print(result)

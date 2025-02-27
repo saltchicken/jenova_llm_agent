@@ -13,7 +13,7 @@ class BaseAgent():
     def setup():
         pass
 
-    def message_dispatcher(self, message):
+    async def message_dispatcher(self, message):
         print(message)
         response = Response(payload="Default response")
         return response
@@ -29,7 +29,7 @@ class BaseAgent():
                     if not data:
                         break
                     message = Message.from_json(data.decode())
-                    result = self.message_dispatcher(message)
+                    result = await self.message_dispatcher(message)
                     response = Response(payload=result)
 
                     # TODO: Return a terminating Response
@@ -123,23 +123,27 @@ class BaseAgent():
             memory += f"Memory:{entry.memory}\n"
         return memory
 
-    def command(self, prompt, model="Test", verbose=False):
+    async def command(self, prompt, model="Test", verbose=False):
         tools = self.promptify_tools()
-        prompt = prompt + "\n" + tools
+        prompt_with_tools = prompt + "\n" + tools
 
         system_message = """You are an AI agent.
 From the following list of tools in the Toolbox, choose which one the user is requesting.
 Respond only with the name of the tool.
 Respond with 'UNKNOWN' if the user's request is not in the Toolbox.""".replace("\n", " ")
 
-        command = query_ollama(model, prompt, system_message, verbose)
+        command = query_ollama(model, prompt_with_tools, system_message, verbose)
         command = command.strip()
 
         result = [tool for tool in self.tools if tool["name"] == command]
 
         if len(result) == 1:
-            result[0]['action']()
-            return result[0]['name']
+            if result[0]['name'] == "search_internet":
+                await result[0]['action'](prompt)
+                return result[0]['name']
+            else:
+                result[0]['action'](prompt)
+                return result[0]['name']
         elif len(result) > 1:
             print("Error with toolbox")
             return None
@@ -168,5 +172,31 @@ Keep your response short and concise.""".replace("\n", " ")
     def memory_dispatch(self, memory):
         self.add_memory(memory)
         return "Added memory"
+
+    def determine_subject(self, prompt, model="Test", verbose=False):
+        # system_message = """Extract the main subject of this entity. Response only with the main subject. Be precise, do not add any additional context""".replace("\n", " ")
+        system_message = """Determine what I am trying to search the internet for. Be very precise and do not provide additional context. I need the output to be something I can put into a query""".replace("\n", " ")
+        return query_ollama(model, prompt, system_message, verbose)
+
+    def get_answer_from_question_information(self, question, question_information, model="test", verbose=True):
+        if question_information == None:
+            return "No question information provided"
+        system_message = """Determine what the answer to the provided QUESTION is from the provided INTERNET SEARCH INFORMATION.
+Do not add any additional context.
+The information you are being provided is from a webscrape that will likely have too much information. Ignore irrelevant information to the question.""".replace("\n", " ")
+        prompt = "INTERNET SEARCH INFORMATION: " + question_information
+        prompt += "\n\n\n"
+        prompt += "QUESTION: " + question
+        return query_ollama(model, prompt, system_message, verbose)
+
+
+    # def subject_of_inquiry(self, prompt):
+    #     import spacy
+    #     nlp = spacy.load("en_core_web_sm")
+    #
+    #     doc = nlp(prompt)
+    #     subjects = [chunk.text for chunk in doc.noun_chunks]
+    #
+    #     return subjects if subjects else "No clear subject found" 
 
 
