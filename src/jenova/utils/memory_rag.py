@@ -24,10 +24,10 @@ class Memory(Base):
     timestamp = Column(DateTime, server_default=func.now())
 
 class Rag():
-    def __init__(self, db_name):
+    def __init__(self, db_name, user="postgres"):
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self.db = db_name
-        DATABASE_URL = f"postgresql://postgres@10.0.0.7:5432/{self.db}"
+        DATABASE_URL = f"postgresql://{user}@10.0.0.7:5432/{self.db}"
         self.engine = create_engine(DATABASE_URL)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
