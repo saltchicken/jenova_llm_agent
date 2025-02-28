@@ -1,5 +1,6 @@
 from jenova.agent.base import BaseAgent
 from jenova.utils.internet_search import search_engine_crawler
+from deepvoice import send_message
 
 class Jenova(BaseAgent):
     def setup(self):
@@ -36,6 +37,7 @@ class Jenova(BaseAgent):
 
         if message.type == 'question':
             result = self.question(message.payload, model="Test", verbose=True)
+            # send_message(result)
 
         if message.type == 'memory':
             result = self.memory_dispatch(message.payload)
