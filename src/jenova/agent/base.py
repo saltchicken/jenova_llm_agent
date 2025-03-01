@@ -68,7 +68,7 @@ class BaseAgent():
             while True:
                 # Perform some other processing here
                 print("Performing other processing...")
-                await asyncio.sleep(1)  # Simulate a non-blocking task
+                await asyncio.sleep(10)  # Simulate a non-blocking task
         except asyncio.CancelledError:
             print("Other processing task canceled.")
             print("Perform cleanup here")
