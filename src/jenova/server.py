@@ -1,6 +1,6 @@
 from jenova.agent.base import BaseAgent
 from jenova.utils.internet_search import search_engine_crawler
-from deepvoice import send_message
+# from deepvoice import send_message
 
 class Jenova(BaseAgent):
     def setup(self):

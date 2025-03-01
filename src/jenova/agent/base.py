@@ -81,11 +81,11 @@ class BaseAgent():
         self.tools.append(tool)
 
     def promptify_tools(self):
-        toolbox = "#Toolbox\n"
-        for i, tool in enumerate(self.tools):
-            toolbox += f"{str(i)}. {tool['name']}\n"
-            toolbox += f"\t- {tool['description']}"
-            toolbox += "\n"
+        toolbox = "<toolbox>\n"
+        for tool in self.tools:
+            toolbox += f"<tool>{tool['name']}</tool>\n"
+            toolbox += f"\t<description>{tool['description']}</description>\n"
+            toolbox += "</toolbox>"
 
         return toolbox
 
@@ -97,30 +97,32 @@ class BaseAgent():
 
     def get_memory(self):
         memory = self.rag.get_memory()
-        memory = self.promptify_memory(memory, "MEMORY")
+        memory = self.promptify_memory(memory, "memories")
         return memory
 
     def get_relevant_conversations(self, query):
         conversations = self.rag.search_conversation_by_prompt(query)
-        conversations = self.promptify_conversations(conversations, "RELEVANT_CONVERSATIONS")
+        conversations = self.promptify_conversations(conversations, "relevant_conversations")
         return conversations
 
     def get_recent_conversations(self):
         conversations = self.rag.get_recent_conversations()
-        conversations = self.promptify_conversations(conversations, "RECENT_CONVERSATIONS")
+        conversations = self.promptify_conversations(conversations, "recent_conversations")
         return conversations
 
     def promptify_conversations(self, conversations, conversation_title):
-        conversation = f"#{conversation_title}:\n"
+        conversation = f"<{conversation_title}>\n"
         for entry in conversations:
-            conversation += f"User:{entry.prompt}\n"
-            conversation += f"Assistant:{entry.response}\n"
+            conversation += f"<user>{entry.prompt}</user>\n"
+            conversation += f"<assistant>{entry.response}</assistant>\n"
+        conversation += f"</{conversation_title}>"
         return conversation
 
     def promptify_memory(self, memories, memory_title):
-        memory = f"#{memory_title}:\n"
+        memory = f"<{memory_title}>\n"
         for entry in memories:
-            memory += f"Memory:{entry.memory}\n"
+            memory += f"<memory>{entry.memory}</memory>\n"
+        memory += f"</{memory_title}>"
         return memory
 
     async def command(self, prompt, model="Test", verbose=False):
@@ -128,9 +130,9 @@ class BaseAgent():
         prompt_with_tools = prompt + "\n" + tools
 
         system_message = """You are an AI agent.
-From the following list of tools in the Toolbox, choose which one the user is requesting.
+From the following list of tools in <toolbox>, choose which one the user is requesting.
 Respond only with the name of the tool.
-Respond with 'UNKNOWN' if the user's request is not in the Toolbox.""".replace("\n", " ")
+Respond with 'UNKNOWN' if the user's request is not in <toolbox>.""".replace("\n", " ")
 
         command = query_ollama(model, prompt_with_tools, system_message, verbose)
         command = command.strip()
@@ -161,8 +163,8 @@ Respond with 'UNKNOWN' if the user's request is not in the Toolbox.""".replace("
 
         system_message = """You are a helpful assistant.
 Your job is to answer questions for the user.
-You are given MEMORY for knowledge you have, RELEVANT_CONVERSATIONS for relevant previous conversations, and RECENT_CONVERSATIONS for the most recent conversations.
-Do not mention that you are checking MEMORY, RELEVANT_CONVERSATIONS and RECENT_CONVERSATIONS.
+You are given <memories> for knowledge you have, <relevant_conversations> for relevant previous conversations, and <recent_conversations> for the most recent conversations.
+Do not mention that you are checking <memories>, <relevant_conversations>, and <recent_conversations>.
 Keep your response short and concise.""".replace("\n", " ")
         response = query_ollama(model, prompt_with_memory_and_recent_conversations, system_message, verbose)
         if response:
@@ -181,12 +183,12 @@ Keep your response short and concise.""".replace("\n", " ")
     def get_answer_from_question_information(self, question, question_information, model="test", verbose=True):
         if question_information == None:
             return "No question information provided"
-        system_message = """Determine what the answer to the provided QUESTION is from the provided INTERNET SEARCH INFORMATION.
+        system_message = """Determine what the answer to the provided <question> is from the provided <internet_search_information>.
 Do not add any additional context.
 The information you are being provided is from a webscrape that will likely have too much information. Ignore irrelevant information to the question.""".replace("\n", " ")
-        prompt = "INTERNET SEARCH INFORMATION: " + question_information
-        prompt += "\n\n\n"
-        prompt += "QUESTION: " + question
+        prompt = "<internet_search_information>\n" + question_information + "\n</internet_search_information>"
+        prompt += "\n"
+        prompt += "<question>\n" + question + "\n</question>"
         return query_ollama(model, prompt, system_message, verbose)
 
 
