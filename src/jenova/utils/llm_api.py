@@ -22,4 +22,9 @@ def pretty_print_prompt(prompt, system_message, response):
     print("----------RESPONSE---------")
     print(response)
     print("\n\n")
+    print(f"Estimated tokens: {estimate_token_length(system_message) + estimate_token_length(prompt)}")
 
+def estimate_token_length(text: str) -> int:
+    """Estimate the number of tokens in a string."""
+    avg_chars_per_token = 4
+    return max(1, len(text) // avg_chars_per_token)
