@@ -7,7 +7,7 @@ from jenova.utils.llm_api import query_ollama
 class BaseAgent():
     def __init__(self, db_name):
         self.tools = []
-        self.rag = Rag(db_name)
+        self.rag = Rag()
         self.setup()
 
     def setup():
@@ -113,15 +113,15 @@ class BaseAgent():
     def promptify_conversations(self, conversations, conversation_title):
         conversation = f"<{conversation_title}>\n"
         for entry in conversations:
-            conversation += f"<user>{entry.prompt}</user>\n"
-            conversation += f"<assistant>{entry.response}</assistant>\n"
+            conversation += f"<user>{entry['prompt']}</user>\n"
+            conversation += f"<assistant>{entry['response']}</assistant>\n"
         conversation += f"</{conversation_title}>"
         return conversation
 
     def promptify_memory(self, memories, memory_title):
         memory = f"<{memory_title}>\n"
         for entry in memories:
-            memory += f"<memory>{entry.memory}</memory>\n"
+            memory += f"<memory>{entry['memory']}</memory>\n"
         memory += f"</{memory_title}>"
         return memory
 
