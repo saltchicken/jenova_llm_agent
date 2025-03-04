@@ -1,4 +1,5 @@
 from sentence_transformers import SentenceTransformer
+import time
 
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility
 import numpy as np
@@ -156,8 +157,10 @@ class Rag():
         collection = Collection("conversations")
         collection.load()
         NUM_RECENT_RESPONSES = 3
+        one_day_ago = int((np.datetime64("now") - np.timedelta64(1, 'D')).astype(int))
+        now = int(np.datetime64("now").astype(int))
         results = collection.query(
-            expr="",
+            expr=f"timestamp >= {one_day_ago} and timestamp <= {now}",
             output_fields=["prompt", "response", "timestamp"],
             limit=1000,
             order_by=[("timestamp", "asc")]
